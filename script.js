@@ -6,8 +6,8 @@ async function convertTextToAudio() {
   }
 
   try {
-    // Send text to backend
-    const response = await fetch("/text-to-audio", {
+    // Call the new Vercel serverless function
+    const response = await fetch("/api/text-to-audio", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text })
@@ -18,12 +18,12 @@ async function convertTextToAudio() {
       return;
     }
 
-    // Receive MP3 and create download link
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     const downloadLink = document.getElementById("audio-download");
     downloadLink.href = url;
     downloadLink.style.display = "inline"; // show download link
+
   } catch (err) {
     console.error(err);
     alert("Error connecting to server.");
