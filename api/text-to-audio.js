@@ -1,6 +1,6 @@
-import { gTTS } from "gtts.js";
+const { gTTS } = require("gtts.js");
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).send("Method not allowed");
 
   const { text } = req.body;
@@ -17,4 +17,4 @@ export default async function handler(req, res) {
     console.error(err);
     res.status(500).send("Error generating audio");
   }
-      }
+};
