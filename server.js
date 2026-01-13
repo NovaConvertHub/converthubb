@@ -1,8 +1,7 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
-const { gTTS } = require("gtts.js"); // pure JS gTTS library
+const { gTTS } = require("gtts.js"); // pure JS gTTS
+const stream = require("stream");
 
 const app = express();
 app.use(cors());
@@ -13,23 +12,24 @@ app.get("/", (req, res) => {
   res.send("ConvertHub backend is running 🚀");
 });
 
-// TEXT → AUDIO route (works on Vercel)
+// TEXT → AUDIO route (serverless-friendly)
 app.post("/text-to-audio", async (req, res) => {
   const text = req.body.text;
   if (!text) return res.status(400).send("No text provided.");
 
   try {
-    const filename = `output_${Date.now()}.mp3`;
-    const filepath = path.join("/tmp", filename); // serverless temp folder
-
-    // create MP3
     const speech = new gTTS(text, "en");
-    await speech.save(filepath);
 
-    // send the file
-    res.download(filepath, filename, () => {
-      fs.unlinkSync(filepath); // delete after sending
-    });
+    // generate MP3 in memory
+    const buffer = await speech.saveToBuffer();
+    const readStream = new stream.PassThrough();
+    readStream.end(buffer);
+
+    res.set('Content-disposition', 'attachment; filename=output.mp3');
+    res.set('Content-Type', 'audio/mpeg');
+
+    readStream.pipe(res); // send MP3 to browser
+
   } catch (err) {
     console.error(err);
     res.status(500).send("Error generating audio.");
